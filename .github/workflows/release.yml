@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    uses: ./.github/workflows/build-linux.yml
+    secrets: inherit
+
+  create-release:
+    name: Create Release
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+
+          # Linux artifacts
+          if [ -d "artifacts/linux-x86_64" ]; then
+            cp artifacts/linux-x86_64/*.deb release-assets/syndrome-ai_${{ steps.version.outputs.version }}_linux_x86_64.deb || true
+            cp artifacts/linux-x86_64/*.AppImage release-assets/syndrome-ai_${{ steps.version.outputs.version }}_linux_x86_64.AppImage || true
+          fi
+
+          CLEAN_VERSION="${{ steps.version.outputs.version }}"
+          CLEAN_VERSION="${CLEAN_VERSION#v}"
+
+          git archive --format=tar.gz --prefix=syndrome-ai-${CLEAN_VERSION}/ -o release-assets/syndrome-ai-${CLEAN_VERSION}.tar.gz HEAD
+          git archive --format=zip --prefix=syndrome-ai-${CLEAN_VERSION}/ -o release-assets/syndrome-ai-${CLEAN_VERSION}.zip HEAD
+
+          cd release-assets
+          for file in *; do
+            if [ -f "$file" ]; then
+              sha256sum "$file" > "$file.sha256"
+            fi
+          done
+          cd ..
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Syndrome AI ${{ steps.version.outputs.version }}
+          draft: true
+          prerelease: false
+          generate_release_notes: true
+          files: release-assets/*
+          body: |
+            <div align="center">
+              <img src="https://raw.githubusercontent.com/${{ github.repository }}/${{ steps.version.outputs.version }}/src-tauri/icons/icon.png" alt="Syndrome AI Logo" width="128" height="128">
+            </div>
+
+            ## Syndrome AI ${{ steps.version.outputs.version }}
+
+            This release was built by CI. Linux artifacts are attached below.
+
+            - Checksums (`.sha256`) are provided for all assets.
+
+            ### Downloads
+
+            - Linux `.deb`: Install with `sudo dpkg -i syndrome-ai_*.deb`
+            - Linux `.AppImage`: `chmod +x` and run, or use `APPIMAGE_EXTRACT_AND_RUN=1` if `/tmp` is noexec

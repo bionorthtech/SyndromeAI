@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Syndrome AI",
+  "version": "0.2.1",
+  "identifier": "ai.syndrome.desktop",
+  "mainBinaryName": "syndrome-ai",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "title": "Syndrome AI",
+        "width": 800,
+        "height": 600,
+        "decorations": false,
+        "transparent": true,
+        "shadow": true,
+        "center": true,
+        "resizable": true,
+        "alwaysOnTop": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; connect-src 'self' ipc: https://ipc.localhost",
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "**"
+        ]
+      }
+    }
+  },
+  "plugins": {
+    "fs": {
+      "scope": [
+        "$HOME/**"
+      ],
+      "allow": [
+        "readFile",
+        "writeFile",
+        "readDir",
+        "copyFile",
+        "createDir",
+        "removeDir",
+        "removeFile",
+        "renameFile",
+        "exists"
+      ]
+    },
+    "shell": {
+      "open": true
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "deb",
+      "rpm",
+      "appimage",
+      "app",
+      "dmg"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/64x64.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png",
+      "icons/icon.ico",
+      "icons/icon.icns"
+    ],
+    "resources": [],
+    "externalBin": [],
+    "copyright": "© 2026 Syndrome AI.",
+    "category": "DeveloperTool",
+    "shortDescription": "Syndrome AI — desktop GUI for Claude Code",
+    "longDescription": "Syndrome AI is a desktop GUI for Claude Code with project/session browsing, usage analytics, a CLAUDE.md editor, and a model switcher for Anthropic cloud models or a local LM Studio endpoint.",
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      },
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"]
+      }
+    },
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": "entitlements.plist",
+      "dmg": {
+        "windowSize": { "width": 540, "height": 380 },
+        "appPosition": { "x": 140, "y": 200 },
+        "applicationFolderPosition": { "x": 400, "y": 200 }
+      }
+    }
+  }
+}
