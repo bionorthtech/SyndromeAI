@@ -384,10 +384,25 @@ pub async fn storage_execute_sql(
 ) -> Result<QueryResult, String> {
     let conn = db.0.lock().map_err(|e| e.to_string())?;
 
-    let normalized = query.trim().to_uppercase();
+    // Collapse all whitespace to single spaces to defeat whitespace-injection bypass
+    let normalized: String = query
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_uppercase();
 
-    // Block DDL and dangerous operations
-    for keyword in &["DROP", "CREATE TABLE", "ALTER TABLE", "ATTACH DATABASE", "DETACH DATABASE", "PRAGMA"] {
+    // Block DDL and dangerous operations (checked after whitespace normalization)
+    for keyword in &[
+        "DROP",
+        "CREATE TABLE",
+        "CREATE TRIGGER",
+        "CREATE INDEX",
+        "CREATE VIEW",
+        "ALTER TABLE",
+        "ATTACH DATABASE",
+        "DETACH DATABASE",
+        "PRAGMA",
+    ] {
         if normalized.starts_with(keyword) || normalized.contains(&format!(" {}", keyword)) {
             return Err(format!("Operation not permitted: {}", keyword));
         }

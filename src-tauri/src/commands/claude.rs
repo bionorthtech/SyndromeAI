@@ -23,6 +23,15 @@ impl Default for ClaudeProcessState {
     }
 }
 
+/// Reject path component strings that could enable directory traversal.
+/// A valid project_id or session_id is a single path segment with no separators.
+fn validate_path_component(value: &str, name: &str) -> Result<(), String> {
+    if value.contains('/') || value.contains('\\') || value.contains("..") || value.is_empty() {
+        return Err(format!("Invalid {}: must be a single path component", name));
+    }
+    Ok(())
+}
+
 /// Represents a project in the ~/.claude/projects directory
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Project {
@@ -894,6 +903,8 @@ pub async fn load_session_history(
     session_id: String,
     project_id: String,
 ) -> Result<Vec<serde_json::Value>, String> {
+    validate_path_component(&session_id, "session_id")?;
+    validate_path_component(&project_id, "project_id")?;
     log::info!(
         "Loading session history for session: {} in project: {}",
         session_id,
@@ -1553,6 +1564,8 @@ pub async fn create_checkpoint(
     message_index: Option<usize>,
     description: Option<String>,
 ) -> Result<crate::checkpoint::CheckpointResult, String> {
+    validate_path_component(&session_id, "session_id")?;
+    validate_path_component(&project_id, "project_id")?;
     log::info!(
         "Creating checkpoint for session: {} in project: {}",
         session_id,
@@ -1612,6 +1625,8 @@ pub async fn restore_checkpoint(
     project_id: String,
     project_path: String,
 ) -> Result<crate::checkpoint::CheckpointResult, String> {
+    validate_path_component(&session_id, "session_id")?;
+    validate_path_component(&project_id, "project_id")?;
     log::info!(
         "Restoring checkpoint: {} for session: {}",
         checkpoint_id,
@@ -1660,6 +1675,8 @@ pub async fn list_checkpoints(
     project_id: String,
     project_path: String,
 ) -> Result<Vec<crate::checkpoint::Checkpoint>, String> {
+    validate_path_component(&session_id, "session_id")?;
+    validate_path_component(&project_id, "project_id")?;
     log::info!(
         "Listing checkpoints for session: {} in project: {}",
         session_id,
@@ -1685,6 +1702,9 @@ pub async fn fork_from_checkpoint(
     new_session_id: String,
     description: Option<String>,
 ) -> Result<crate::checkpoint::CheckpointResult, String> {
+    validate_path_component(&session_id, "session_id")?;
+    validate_path_component(&project_id, "project_id")?;
+    validate_path_component(&new_session_id, "new_session_id")?;
     log::info!(
         "Forking from checkpoint: {} to new session: {}",
         checkpoint_id,
@@ -1732,6 +1752,8 @@ pub async fn get_session_timeline(
     project_id: String,
     project_path: String,
 ) -> Result<crate::checkpoint::SessionTimeline, String> {
+    validate_path_component(&session_id, "session_id")?;
+    validate_path_component(&project_id, "project_id")?;
     log::info!(
         "Getting timeline for session: {} in project: {}",
         session_id,
