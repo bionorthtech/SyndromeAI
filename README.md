@@ -31,9 +31,24 @@
 
 Think of Syndrome AI as your command center for Claude Code — bridging the gap between the command-line tool and a visual experience that makes AI-assisted development more intuitive and productive.
 
+## 📸 Screenshots
+
+<div align="center">
+
+| Projects | Create Agent |
+|:---:|:---:|
+| ![Projects](docs/screenshots/projects.png) | ![Create Agent](docs/screenshots/create-agent.png) |
+| **Model Switcher** (cloud ↔ local) | **Permission Rules** |
+| ![Model Switcher](docs/screenshots/model-switcher.png) | ![Permissions](docs/screenshots/permissions.png) |
+| **Settings** | **Lifecycle Hooks** |
+| ![Settings](docs/screenshots/settings.png) | ![Hooks](docs/screenshots/hooks.png) |
+
+</div>
+
 ## 📋 Table of Contents
 
 - [🌟 Overview](#-overview)
+- [📸 Screenshots](#-screenshots)
 - [✨ Features](#-features)
   - [🗂️ Project & Session Management](#️-project--session-management)
   - [🤖 CC Agents](#-cc-agents)
