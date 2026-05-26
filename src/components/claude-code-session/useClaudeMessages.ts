@@ -82,7 +82,7 @@ export function useClaudeMessages(options: UseClaudeMessagesOptions = {}) {
 
   const loadMessages = useCallback(async (sessionId: string) => {
     try {
-      const output = await api.getSessionOutput(parseInt(sessionId));
+      const output = await api.getClaudeSessionOutput(sessionId);
       // Note: API returns a string, not an array of outputs
       const outputs = [{ jsonl: output }];
       const loadedMessages: ClaudeStreamMessage[] = [];
@@ -142,14 +142,7 @@ export function useClaudeMessages(options: UseClaudeMessagesOptions = {}) {
         };
         
         window.addEventListener('claude-output', webEventHandler);
-        
-        // Test if event listener is working
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('claude-output', {
-            detail: { type: 'test', message: 'test event' }
-          }));
-        }, 1000);
-        
+
         eventListenerRef.current = () => {
           window.removeEventListener('claude-output', webEventHandler);
         };

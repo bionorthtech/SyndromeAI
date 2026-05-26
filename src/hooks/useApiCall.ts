@@ -28,7 +28,6 @@ export function useApiCall<T>(
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
 
   const {
@@ -43,45 +42,28 @@ export function useApiCall<T>(
   const call = useCallback(
     async (...args: any[]): Promise<T | null> => {
       try {
-        // Cancel any pending request
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-        }
-
-        // Create new abort controller
-        abortControllerRef.current = new AbortController();
-
         setIsLoading(true);
         setError(null);
 
         const result = await apiFunction(...args);
 
-        // Only update state if component is still mounted
         if (!isMountedRef.current) return null;
 
         setData(result);
-        
+
         if (showSuccessToast) {
-          // TODO: Implement toast notification
           console.log('Success:', successMessage);
         }
 
         onSuccess?.(result);
         return result;
       } catch (err) {
-        // Ignore aborted requests
-        if (err instanceof Error && err.name === 'AbortError') {
-          return null;
-        }
-
-        // Only update state if component is still mounted
         if (!isMountedRef.current) return null;
 
         const error = err instanceof Error ? err : new Error('An error occurred');
         setError(error);
 
         if (showErrorToast) {
-          // TODO: Implement toast notification
           console.error('Error:', errorMessage || error.message);
         }
 
@@ -102,14 +84,8 @@ export function useApiCall<T>(
     setIsLoading(false);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
+    return () => { isMountedRef.current = false; };
   }, []);
 
   return { data, isLoading, error, call, reset };

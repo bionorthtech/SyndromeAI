@@ -26,7 +26,24 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { api, type Agent } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+// Conditional import for Tauri — web mode uses DOM event fallback
+type UnlistenFn = () => void;
+type ListenFn = <T>(event: string, handler: (event: { payload: T }) => void) => Promise<UnlistenFn>;
+
+let listen: ListenFn;
+try {
+  if (typeof window !== 'undefined' && window.__TAURI__) {
+    listen = require("@tauri-apps/api/event").listen;
+  } else {
+    throw new Error('not tauri');
+  }
+} catch (_e) {
+  listen = (eventName, callback) => {
+    const handler = (e: Event) => callback({ payload: (e as CustomEvent).detail });
+    window.addEventListener(eventName, handler);
+    return Promise.resolve(() => window.removeEventListener(eventName, handler));
+  };
+}
 import { StreamMessage } from "./StreamMessage";
 import { ExecutionControlBar } from "./ExecutionControlBar";
 import { ErrorBoundary } from "./ErrorBoundary";

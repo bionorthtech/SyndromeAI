@@ -40,7 +40,7 @@ export function useCheckpoints({ sessionId, projectId, projectPath, onToast }: U
         sessionId: cp.sessionId,
         name: cp.description || `Checkpoint at ${cp.timestamp}`,
         createdAt: cp.timestamp,
-        messageCount: cp.metadata.totalTokens
+        messageCount: cp.metadata.fileChanges
       }));
       setCheckpoints(mappedCheckpoints);
       setTimelineVersion(prev => prev + 1);

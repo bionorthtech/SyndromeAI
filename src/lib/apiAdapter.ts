@@ -58,61 +58,85 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+// Commands that mutate state — use POST instead of GET
+const POST_COMMANDS = new Set([
+  'create_agent', 'update_agent', 'import_agent', 'import_agent_from_file',
+  'import_agent_from_github', 'execute_agent', 'kill_agent_session',
+  'cleanup_finished_processes', 'stream_session_output',
+  'save_claude_settings', 'save_system_prompt', 'save_claude_md_file',
+  'open_new_session', 'execute_claude_code', 'continue_claude_code', 'resume_claude_code',
+  'cancel_claude_execution', 'mcp_add', 'mcp_add_json', 'mcp_add_from_claude_desktop',
+  'mcp_serve', 'mcp_reset_project_choices', 'mcp_save_project_config',
+  'set_claude_binary_path',
+  'storage_update_row', 'storage_insert_row', 'storage_execute_sql', 'storage_reset_database',
+  'update_hooks_config', 'validate_hook_command',
+  'slash_command_save',
+  'create_checkpoint', 'restore_checkpoint', 'fork_from_checkpoint',
+  'update_checkpoint_settings', 'track_checkpoint_message', 'track_session_messages',
+  'cleanup_old_checkpoints', 'clear_checkpoint_manager',
+  'create_project',
+]);
+
+// Commands that delete state — use DELETE
+const DELETE_COMMANDS = new Set([
+  'delete_agent', 'mcp_remove', 'storage_delete_row', 'slash_command_delete',
+]);
+
 /**
  * Make a REST API call to our web server
  */
-async function restApiCall<T>(endpoint: string, params?: any): Promise<T> {
-  // First handle path parameters in the endpoint string
+async function restApiCall<T>(command: string, endpoint: string, params?: any): Promise<T> {
+  // Substitute path parameters in the endpoint string
   let processedEndpoint = endpoint;
-  
+  const usedAsPathParam = new Set<string>();
+
   if (params) {
     Object.keys(params).forEach(key => {
-      // Try different case variations for the placeholder
       const placeholders = [
         `{${key}}`,
         `{${key.charAt(0).toLowerCase() + key.slice(1)}}`,
         `{${key.charAt(0).toUpperCase() + key.slice(1)}}`
       ];
-      
       placeholders.forEach(placeholder => {
         if (processedEndpoint.includes(placeholder)) {
           processedEndpoint = processedEndpoint.replace(placeholder, encodeURIComponent(String(params[key])));
+          usedAsPathParam.add(key);
         }
       });
     });
   }
-  
-  
+
+  const method = DELETE_COMMANDS.has(command) ? 'DELETE'
+    : POST_COMMANDS.has(command) ? 'POST'
+    : 'GET';
+
   const url = new URL(processedEndpoint, window.location.origin);
-  
-  // Add remaining params as query parameters for GET requests (if no placeholders remain)
-  if (params && !processedEndpoint.includes('{')) {
-    Object.keys(params).forEach(key => {
-      // Only add as query param if it wasn't used as a path param
-      if (!endpoint.includes(`{${key}}`) && 
-          !endpoint.includes(`{${key.charAt(0).toLowerCase() + key.slice(1)}}`) &&
-          !endpoint.includes(`{${key.charAt(0).toUpperCase() + key.slice(1)}}`) &&
-          params[key] !== undefined && 
-          params[key] !== null) {
-        url.searchParams.append(key, String(params[key]));
-      }
-    });
+
+  // Remaining params: body for POST/DELETE, query string for GET
+  const remainingParams = params
+    ? Object.fromEntries(
+        Object.entries(params).filter(([k, v]) => !usedAsPathParam.has(k) && v !== undefined && v !== null)
+      )
+    : null;
+
+  const fetchOptions: RequestInit = { method, headers: { 'Content-Type': 'application/json' } };
+  if (method === 'GET') {
+    if (remainingParams) {
+      Object.entries(remainingParams).forEach(([k, v]) => url.searchParams.append(k, String(v)));
+    }
+  } else if (remainingParams && Object.keys(remainingParams).length > 0) {
+    fetchOptions.body = JSON.stringify(remainingParams);
   }
 
   try {
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(url.toString(), fetchOptions);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const result: ApiResponse<T> = await response.json();
-    
+
     if (!result.success) {
       throw new Error(result.error || 'API call failed');
     }
@@ -144,7 +168,7 @@ export async function apiCall<T>(command: string, params?: any): Promise<T> {
   
   // Map Tauri commands to REST endpoints
   const endpoint = mapCommandToEndpoint(command, params);
-  return await restApiCall<T>(endpoint, params);
+  return await restApiCall<T>(command, endpoint, params);
 }
 
 /**
@@ -170,6 +194,7 @@ function mapCommandToEndpoint(command: string, _params?: any): string {
     'import_agent_from_file': '/api/agents/import/file',
     'execute_agent': '/api/agents/{agentId}/execute',
     'list_agent_runs': '/api/agents/runs',
+    'list_agent_runs_with_metrics': '/api/agents/runs/metrics',
     'get_agent_run': '/api/agents/runs/{id}',
     'get_agent_run_with_real_time_metrics': '/api/agents/runs/{id}/metrics',
     'list_running_sessions': '/api/sessions/running',
@@ -229,8 +254,8 @@ function mapCommandToEndpoint(command: string, _params?: any): string {
     // Storage commands
     'storage_list_tables': '/api/storage/tables',
     'storage_read_table': '/api/storage/tables/{tableName}',
-    'storage_update_row': '/api/storage/tables/{tableName}/rows/{id}',
-    'storage_delete_row': '/api/storage/tables/{tableName}/rows/{id}',
+    'storage_update_row': '/api/storage/tables/{tableName}/rows',
+    'storage_delete_row': '/api/storage/tables/{tableName}/rows',
     'storage_insert_row': '/api/storage/tables/{tableName}/rows',
     'storage_execute_sql': '/api/storage/sql',
     'storage_reset_database': '/api/storage/reset',
