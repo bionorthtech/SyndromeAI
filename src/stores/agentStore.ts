@@ -30,7 +30,7 @@ interface AgentState {
   // Polling management
   startPolling: (interval?: number) => void;
   stopPolling: () => void;
-  pollingInterval: NodeJS.Timeout | null;
+  pollingInterval: ReturnType<typeof setInterval> | null;
 }
 
 const agentStore: StateCreator<

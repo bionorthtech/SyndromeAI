@@ -47,8 +47,9 @@ import { StreamMessage } from "./StreamMessage";
 import { FloatingPromptInput, type FloatingPromptInputRef } from "./FloatingPromptInput";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { SessionDialogs } from "./claude-code-session/SessionDialogs";
-import { buildMarkdownExport } from "./claude-code-session/sessionExport";
+import { TimelineNavigator } from "./TimelineNavigator";
+import { CheckpointSettings } from "./CheckpointSettings";
+import { SlashCommandsManager } from "./SlashCommandsManager";
 import { TooltipProvider, TooltipSimple } from "@/components/ui/tooltip-modern";
 import { SplitPane } from "@/components/ui/split-pane";
 import { WebviewPreview } from "./WebviewPreview";
@@ -463,6 +464,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
       if (isMountedRef.current) {
         setIsLoading(false);
         hasActiveSessionRef.current = false;
+        isListeningRef.current = false;
       }
     });
 
@@ -965,15 +967,15 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
     if (!claudeSessionId || !isLoading) return;
     
     try {
-      const sessionStartTime = messages.length > 0 ? messages[0].timestamp || Date.now() : Date.now();
-      const duration = Date.now() - sessionStartTime;
-      
+      const sessionStartTimeValue = messages.length > 0 ? messages[0].timestamp || Date.now() : Date.now();
+      const duration = Date.now() - sessionStartTimeValue;
+
       await api.cancelClaudeExecution(claudeSessionId);
-      
+
       // Calculate metrics for enhanced analytics
       const metrics = sessionMetrics.current;
-      const timeToFirstMessage = metrics.firstMessageTime 
-        ? metrics.firstMessageTime - sessionStartTime.current 
+      const timeToFirstMessage = metrics.firstMessageTime
+        ? metrics.firstMessageTime - sessionStartTime.current
         : undefined;
       const idleTime = Date.now() - metrics.lastActivityTime;
       const avgResponseTime = metrics.toolExecutionTimes.length > 0

@@ -61,7 +61,6 @@ function AppContent() {
   const [homeDirectory, setHomeDirectory] = useState<string>('/');
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [projectForSettings, setProjectForSettings] = useState<Project | null>(null);
-  const [previousView] = useState<View>("welcome");
   
   // Initialize analytics lifecycle tracking
   useAppLifecycle();
@@ -78,7 +77,7 @@ function AppContent() {
       trackEvent.journeyMilestone({
         journey_stage: 'onboarding',
         milestone_reached: 'projects_created',
-        time_to_milestone_ms: Date.now() - performance.timing.navigationStart
+        time_to_milestone_ms: Date.now() - performance.timeOrigin
       });
     }
   }, [view, projects.length, hasTrackedFirstChat, trackEvent]);
@@ -363,7 +362,7 @@ function AppContent() {
               project={projectForSettings}
               onBack={() => {
                 setProjectForSettings(null);
-                handleViewChange(previousView || "projects");
+                handleViewChange("tabs");
               }}
             />
           );
