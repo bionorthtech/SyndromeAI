@@ -1832,7 +1832,7 @@ pub async fn fetch_github_agents() -> Result<Vec<GitHubAgentFile>, String> {
     let response = client
         .get(url)
         .header("Accept", "application/vnd.github+json")
-        .header("User-Agent", "opcode-App")
+        .header("User-Agent", "Syndrome-AI")
         .send()
         .await
         .map_err(|e| format!("Failed to fetch from GitHub: {}", e))?;

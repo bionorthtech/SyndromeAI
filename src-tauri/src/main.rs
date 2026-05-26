@@ -53,16 +53,22 @@ use tauri::Manager;
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 
 fn main() {
-    // Initialize logger
+    
+    // 1. Force Tauri to use X11/XWayland instead of native Wayland to prevent freezing
+    std::env::set_var("GDK_BACKEND", "x11");
+
+    // 2. Initialize logger
     env_logger::init();
 
+    // 3. Start the ONE AND ONLY Tauri Builder chain
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             // Initialize agents database
             let conn = init_database(&app.handle()).expect("Failed to initialize agents database");
-
+            
+            // ... the rest of your database, proxy, and state code continues down here
             // Load and apply proxy settings from the database
             {
                 let db = AgentDb(Mutex::new(conn));
