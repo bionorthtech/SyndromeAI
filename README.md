@@ -31,9 +31,39 @@
 
 Think of Syndrome AI as your command center for Claude Code — bridging the gap between the command-line tool and a visual experience that makes AI-assisted development more intuitive and productive.
 
+## 🎥 Demo
+
+<div align="center">
+
+![Syndrome AI Demo](docs/screenshots/demo.gif)
+
+*A quick tour through the app. A higher-quality recording is available at [`docs/demo.webm`](docs/demo.webm).*
+
+</div>
+
+## 📸 Screenshots
+
+<div align="center">
+
+| Projects | Create Agent |
+|:---:|:---:|
+| ![Projects](docs/screenshots/projects.png) | ![Create Agent](docs/screenshots/create-agent.png) |
+| **Model Switcher** (cloud ↔ local) | **Permission Rules** |
+| ![Model Switcher](docs/screenshots/model-switcher.png) | ![Permissions](docs/screenshots/permissions.png) |
+| **General Settings** | **Lifecycle Hooks** |
+| ![Settings](docs/screenshots/settings.png) | ![Hooks](docs/screenshots/hooks.png) |
+| **Environment Variables** | **Advanced Settings** |
+| ![Environment](docs/screenshots/environment.png) | ![Advanced](docs/screenshots/advanced.png) |
+| **MCP Server Management** | |
+| ![MCP Servers](docs/screenshots/mcp.png) | |
+
+</div>
+
 ## 📋 Table of Contents
 
 - [🌟 Overview](#-overview)
+- [🎥 Demo](#-demo)
+- [📸 Screenshots](#-screenshots)
 - [✨ Features](#-features)
   - [🗂️ Project & Session Management](#️-project--session-management)
   - [🤖 CC Agents](#-cc-agents)
