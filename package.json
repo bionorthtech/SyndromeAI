@@ -2,6 +2,8 @@
   "name": "syndrome-ai",
   "private": true,
   "version": "0.2.1",
+  "description": "AI-powered desktop app that runs Claude Code agents locally for intelligent clinical decision support, differential diagnosis, and medical research.",
+  "keywords": ["ai", "claude", "tauri", "desktop", "clinical", "medical", "diagnosis", "llm", "agent"],
   "license": "AGPL-3.0",
   "type": "module",
   "scripts": {
